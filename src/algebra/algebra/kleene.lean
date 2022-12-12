@@ -6,7 +6,6 @@ Authors: Siddhartha Prasad.
 -/
 
 
-
 import data.real.basic
 import data.vector
 import tactic.explode
@@ -14,9 +13,6 @@ import tactic.find
 import tactic.induction
 import tactic.rcases
 import tactic.rewrite
-
-
-
 
 /-!
 # Kleene Algebras
@@ -42,11 +38,10 @@ kleene algebra
 -/
 
 
+
 namespace isemiring
 
-
 universe u
-
 variables {α : Type u}
 
 /--
@@ -201,11 +196,6 @@ end
 /--
   Multiplication preserves the partial order defined by ≤.
 --/
-
-
-
-
-
 lemma mul_monotone : ∀ a b c: α, a ≤ b → (c*a) ≤ (c*b)
 :=
 begin
@@ -218,6 +208,9 @@ begin
   rw isemiring.idem_add (c * a),
 end
 
+/--
+  Multiplication preserves the partial order defined by ≤ (commutative variation).
+--/
 lemma mul_monotone_comm : ∀ a b c: α, a ≤ b → (a*c) ≤ (b*c)
 :=
 begin
@@ -241,11 +234,11 @@ variables {α : Type u}
 A Kleene Algebra is an isemiring with an additional unary operator (star), that
 satisfies the following properties:
 
-1 + a* (a ∗) ≤ (a ∗)
-1 + (a ∗) * a ≤ (a ∗)
+1 + a* (a∗) ≤ (a∗)
+1 + (a∗) * a ≤ (a∗)
 
-a*c + b ≤ c ⇒ (a ∗) * b ≤ c
-c*a + b ≤ c ⇒ b * (a ∗) ≤ c ,
+a*c + b ≤ c ⇒ (a∗) * b ≤ c
+c*a + b ≤ c ⇒ b * (a∗) ≤ c ,
 
 -/
 class kleene_algebra (α : Type u) extends isemiring.isemiring α :=
@@ -262,23 +255,29 @@ variables [kleene_algebra α] {a b c: α}
 open isemiring
 
 
-lemma lfp_monotone : ∀ a b : α, b + (a ∗ )* a * b ≤ (a ∗ ) * b :=
+/--
+ (a ∗)*b is the least prefixpoint of the monotone map x ↦ b + a*x
+--/
+lemma lfp_monotone : ∀ a b : α, b + (a∗)* a * b ≤ (a∗) * b :=
 begin
   intros a b,
-  have h₀ : (1 + (a ∗)*a) * b = b +  (a ∗ ) * a * b :=
+  have h₀ : (1 + (a∗)*a) * b = b +  (a∗) * a * b :=
   begin
     exact one_add_mul ((a∗)*a) b
   end,
 
-  have h₁: (1 + (a ∗)*a) * b ≤ (a ∗ ) * b  :=
+  have h₁: (1 + (a∗)*a) * b ≤ (a∗) * b  :=
   begin
     have ha := (kleene_algebra.star_unfold_left a),
-    exact mul_monotone_comm (1 + (a ∗ )*a) (a ∗ ) b ha,
+    exact mul_monotone_comm (1 + (a∗)*a) (a∗) b ha,
   end,
   exact (eq.symm h₀).trans_le h₁
 end
 
-lemma star_monotone : ∀a b : α, a ≤ b → (a ∗ ) ≤ (b ∗) :=
+/--
+  Kleene star (∗) preserves monotonicity on the partial order ≤.
+--/
+lemma star_monotone : ∀a b : α, a ≤ b → (a∗) ≤ (b ∗) :=
 begin
   intros x y h,
   have h₀ := kleene_algebra.star_inf_left x 1 (y ∗ ),
@@ -298,61 +297,80 @@ begin
   exact le_trans h₁ h₂,
 end
 
-
+/--
+1 is the bottom element of the kleene star.
+--/
 lemma partial_order_of_one : ∀ a : α, 1 ≤ (a∗) :=
 begin
   intro a,
   have h₀ := kleene_algebra.star_unfold_left a,
-  have h₁ := (ineq_of_add 1 ((a ∗ )* a) (a ∗ )).mp h₀,
+  have h₁ := (ineq_of_add 1 ((a∗)* a) (a∗)).mp h₀,
   cases' h₁,
   exact left,
 end
 
-lemma ineq_of_star : ∀ a : α, a ≤ (a ∗) :=
+/-
+  This section shows that for some element x in a Kleene Algebra, x∗ is the
+  reflexive and transitive element dominating x.
+-/
+
+
+/--
+  All members 'a', of a kleene algebra are ordered lower than (a∗)
+--/
+lemma ineq_of_star : ∀ a : α, a ≤ (a∗) :=
 begin
   intro a,
   have h₀ := kleene_algebra.star_unfold_right a,
-  have h₁ : a ≤ a * (a ∗) :=
+  have h₁ : a ≤ a * (a∗) :=
   begin
-     have h_int := mul_monotone 1 (a ∗) a (partial_order_of_one a),
+     have h_int := mul_monotone 1 (a∗) a (partial_order_of_one a),
      simp [mul_one] at h_int,
      exact h_int,
   end,
-  have h₂ : a * (a ∗ ) ≤ 1 + a * (a ∗ ) :=
-  begin
-    rw [add_comm],
-    exact le_of_add (a * (a ∗)) 1,
-  end,
-  exact le_implies_le_of_le_of_le h₁ h₀ h₂,
-end
-
-lemma mul_of_star_le : ∀ a : α, (a ∗ ) * (a ∗ ) ≤ (a ∗ ) :=
-begin
-  intro a,
-  have h := kleene_algebra.star_unfold_right a,
-  have h₀ : a*(a ∗) ≤ 1 + a*(a ∗) :=
+  have h₂ : a * (a∗) ≤ 1 + a * (a∗) :=
   begin
     rw [add_comm],
     exact le_of_add (a * (a∗)) 1,
   end,
-  have h₁ : a*(a ∗) ≤ (a ∗) := by exact le_trans h₀ h,
-  have h₂ :  a*(a∗) + (a ∗) ≤ (a ∗) :=
-  begin
-    have h' : a*(a ∗) + (a ∗) ≤ (a ∗) + (a ∗) := by
-        exact add_monotone (a*(a ∗)) (a ∗) (a ∗) h₁,
-    rw [isemiring.idem_add (a ∗)] at h',
-    exact h',
-  end,
-  apply kleene_algebra.star_inf_right a (a ∗) (a ∗) h₂,
+  exact le_implies_le_of_le_of_le h₁ h₀ h₂,
 end
 
-lemma mul_of_star : ∀ a : α, (a ∗ ) * (a ∗ ) = (a ∗ ) :=
+/--
+  For all members 'a' of a Kleene Algebra,
+  the product of (a∗) with itself is ordered lower that a∗.
+--/
+lemma mul_of_star_le : ∀ a : α, (a∗) * (a∗) ≤ (a∗) :=
 begin
   intro a,
-  have h₁ := mul_monotone 1 (a ∗) (a ∗) (partial_order_of_one a),
+  have h := kleene_algebra.star_unfold_right a,
+  have h₀ : a*(a∗) ≤ 1 + a*(a∗) :=
+  begin
+    rw [add_comm],
+    exact le_of_add (a * (a∗)) 1,
+  end,
+  have h₁ : a*(a∗) ≤ (a∗) := by exact le_trans h₀ h,
+  have h₂ :  a*(a∗) + (a∗) ≤ (a∗) :=
+  begin
+    have h' : a*(a∗) + (a∗) ≤ (a∗) + (a∗) := by
+        exact add_monotone (a*(a∗)) (a∗) (a∗) h₁,
+    rw [isemiring.idem_add (a∗)] at h',
+    exact h',
+  end,
+  apply kleene_algebra.star_inf_right a (a∗) (a∗) h₂,
+end
+
+/--
+  For all members 'a' of a Kleene Algebra,
+  the product of (a∗) with itself is  equal to a∗.
+--/
+lemma mul_of_star : ∀ a : α, (a∗) * (a∗) = (a∗) :=
+begin
+  intro a,
+  have h₁ := mul_monotone 1 (a∗) (a∗) (partial_order_of_one a),
   simp [mul_one] at h₁,
   have h₂ := mul_of_star_le a,
-  have h₃ := (isemiring.ineq_of_eq ((a ∗)*(a ∗)) (a ∗)).mpr,
+  have h₃ := (isemiring.ineq_of_eq ((a∗)*(a∗)) (a∗)).mpr,
   apply h₃,
   apply and.intro,
   {
@@ -364,17 +382,20 @@ begin
 end
 
 
-
-lemma star_of_star : ∀ a : α, (a ∗ ) = ((a ∗ ) ∗) :=
+/--
+  Kleene star is idempotent.
+--/
+lemma star_of_star : ∀ a : α, (a∗) = ((a∗) ∗) :=
 begin
   intro a,
 
-  have h₁ : (a ∗ ) ≤ ((a ∗ ) ∗) := by exact star_monotone a (a ∗) (ineq_of_star a),
-  have h₂ : ((a ∗)∗) ≤ (a ∗) :=
+  have h₁ : (a∗) ≤ ((a∗) ∗) := by exact star_monotone a (a∗) (ineq_of_star a),
+  have h₂ : ((a∗)∗) ≤ (a∗) :=
   begin
+    -- TODO
     sorry,
   end,
-  have h₃ := (isemiring.ineq_of_eq (a∗) ((a ∗)∗)).mpr,
+  have h₃ := (isemiring.ineq_of_eq (a∗) ((a∗)∗)).mpr,
   apply h₃,
   apply and.intro,
   {
