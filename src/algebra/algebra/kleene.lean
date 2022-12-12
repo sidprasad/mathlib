@@ -223,9 +223,6 @@ begin
   rw isemiring.idem_add (a * c),
 end
 
-
-
-
 end isemiring
 
 namespace kleene_algebra
@@ -266,21 +263,38 @@ lemma star_ind_right : a*c ≤ c → (a ∗) * c ≤ c := sorry
 lemma star_ind_left : c*a ≤ c → c*(a ∗) ≤ c := sorry
 
 /-- (a ∗) * b is the least prefixpoint of the monotone map c ↦ b + a*c --/
-lemma lfp_monotone : ∀ a b : α, b + a * (a ∗ ) * b ≤ (a ∗ ) * b :=
+-- lemma lfp_monotone : ∀ a b : α, b + a * (a ∗ ) * b ≤ (a ∗ ) * b :=
+-- begin
+--   intros a b,
+--   have h₀ : (1 + a * (a ∗ )) * b = b + a * (a ∗ ) * b :=
+--   begin
+--     exact one_add_mul (a * (a∗)) b
+--   end,
+--   have h₁: (1 + a * (a ∗ )) * b ≤ (a ∗ ) * b  :=
+--   begin
+--     have ha := (kleene_algebra.star_unfold_right a),
+--     exact mul_monotone_comm (1 + a * (a ∗ )) (a ∗ ) b ha,
+--   end,
+--   exact (eq.symm h₀).trans_le h₁
+-- end
+
+
+
+lemma lfp_monotone : ∀ a b : α, b + (a ∗ )* a * b ≤ (a ∗ ) * b :=
 begin
   intros a b,
-  have h₀ : (1 + a * (a ∗ )) * b = b + a * (a ∗ ) * b :=
+  have h₀ : (1 + (a ∗)*a) * b = b +  (a ∗ ) * a * b :=
   begin
-    exact one_add_mul (a * (a∗)) b
+    exact one_add_mul ((a∗)*a) b
   end,
-  have h₁: (1 + a * (a ∗ )) * b ≤ (a ∗ ) * b  :=
+
+  have h₁: (1 + (a ∗)*a) * b ≤ (a ∗ ) * b  :=
   begin
-    have ha := (kleene_algebra.star_unfold_right a),
-    exact mul_monotone_comm (1 + a * (a ∗ )) (a ∗ ) b ha,
+    have ha := (kleene_algebra.star_unfold_left a),
+    exact mul_monotone_comm (1 + (a ∗ )*a) (a ∗ ) b ha,
   end,
   exact (eq.symm h₀).trans_le h₁
 end
-
 
 
 
@@ -296,13 +310,10 @@ begin
   end,
   have h₂ : (y ∗)* y + 1 ≤ (y∗) :=
   begin
-
     have hh := lfp_monotone y 1,
     simp [mul_one] at hh,
     rw [add_comm] at hh,
-    -- need to rewrite lfp_monotone to accomodate this
-    sorry,
-
+    exact hh,
   end,
   exact le_trans h₁ h₂,
 end
