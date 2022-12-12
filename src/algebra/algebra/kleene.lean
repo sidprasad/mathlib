@@ -17,6 +17,7 @@ import tactic.rewrite
 
 
 
+
 /-!
 # Kleene Algebras
 
@@ -90,6 +91,38 @@ begin
   rw [this],
   rw (isemiring.idem_add x),
 end
+
+
+/-- The addition operator on isemirings is monotonic across the partial order --/
+lemma add_monotone : ∀ a b c: α, a ≤ b → a + c ≤ b + c :=
+begin
+  intros x y c h,
+  rw [isemiring.le_def] at *,
+  have h₁ : x + y + c + c = y + c + c :=
+        by exact congr_arg2 has_add.add (congr_fun (congr_arg has_add.add h) c) rfl,
+  have h₂ : x + y + c + c = (x + c) + (y + c) :=
+    begin
+      calc x + y + c + c = x + y + (c + c) : by exact add_assoc (x + y) c c
+      ...  = x + (y + (c + c)) : by exact add_assoc x y (c + c)
+      ...  = x + ((y + c) + c) : by rw [add_assoc]
+      ... = (x + (y + c)) + c : by exact (add_assoc x (y + c) c).symm
+      ... = (x + c) + (y + c) : by  exact add_right_comm x (y + c) c,
+    end,
+  have h₃ : y + c + c = y + c :=
+    begin
+      calc y + c + c  = y + (c + c) : _
+      ... = y + c : _,
+      {
+        exact add_assoc y c c,
+      },
+      {
+        rw (isemiring.idem_add c),
+      }
+    end,
+  have h₃ : (x + c) + (y + c) = (y + c) := by exact (eq.congr h₂ h₃).mp h₁,
+  exact h₃,
+end
+
 
 /-- If c is the supremum of a and b with respect to ≤, then c
 is also the supremum of a + b. -/
@@ -167,10 +200,10 @@ end
 /--
   Multiplication preserves the partial order defined by ≤.
 --/
-lemma partial_order_of_mul : a ≤ b → (c*a) ≤ (c*b)
+lemma mul_monotone : ∀ a b c: α, a ≤ b → (c*a) ≤ (c*b)
 :=
 begin
-  intro h,
+  intros a b c h,
   have h_le : b = (a + b) := by exact eq.symm ((isemiring.le_def a b).mp h),
   have h_distr : c * (a + b) = (c* a) + (c * b) := by exact mul_add c a b,
 
@@ -178,6 +211,19 @@ begin
   rw (add_assoc (c * a) (c * a) (c * b)).symm,
   rw isemiring.idem_add (c * a),
 end
+
+lemma mul_monotone_comm : ∀ a b c: α, a ≤ b → (a*c) ≤ (b*c)
+:=
+begin
+  intros a b c h,
+  have h_le : b = (a + b) := by exact eq.symm ((isemiring.le_def a b).mp h),
+  have h_distr :(a + b)*c = ( a * c) + ( b * c) := by exact add_mul a b c,
+  rw [h_le, h_distr, isemiring.le_def],
+  rw (add_assoc (a * c) (a * c) (b * c)).symm,
+  rw isemiring.idem_add (a * c),
+end
+
+
 
 
 end isemiring
@@ -209,6 +255,8 @@ notation  a`∗` := kleene_algebra.star a
 
 variables [kleene_algebra α] {a b c: α}
 
+open isemiring
+
 /-- 'star_ind_right' and star_ind_left'  show that ∗
  behaves like the relfexive transitive cloure of a relational algebra. --/
 lemma star_ind_right : a*c ≤ c → (a ∗) * c ≤ c := sorry
@@ -218,19 +266,73 @@ lemma star_ind_right : a*c ≤ c → (a ∗) * c ≤ c := sorry
 lemma star_ind_left : c*a ≤ c → c*(a ∗) ≤ c := sorry
 
 /-- (a ∗) * b is the least prefixpoint of the monotone map c ↦ b + a*c --/
-lemma lfp_monotone : b + a * (a ∗ ) * b ≤ (a ∗ ) * b := sorry
+lemma lfp_monotone : ∀ a b : α, b + a * (a ∗ ) * b ≤ (a ∗ ) * b :=
+begin
+  intros a b,
+  have h₀ : (1 + a * (a ∗ )) * b = b + a * (a ∗ ) * b :=
+  begin
+    exact one_add_mul (a * (a∗)) b
+  end,
+  have h₁: (1 + a * (a ∗ )) * b ≤ (a ∗ ) * b  :=
+  begin
+    have ha := (kleene_algebra.star_unfold_right a),
+    exact mul_monotone_comm (1 + a * (a ∗ )) (a ∗ ) b ha,
+  end,
+  exact (eq.symm h₀).trans_le h₁
+end
 
 
+
+
+lemma star_monotone : ∀a b : α, a ≤ b → (a ∗ ) ≤ (b ∗) :=
+begin
+  intros x y h,
+  have h₀ := kleene_algebra.star_inf_left x 1 (y ∗ ),
+  simp [mul_one] at h₀,
+  apply h₀,
+  have h₁ : (y ∗)*x + 1 ≤ (y ∗)*y + 1 := -- by monotonicity,
+  begin
+    exact add_monotone ((y ∗)*x) ((y∗)*y) 1 (mul_monotone x y (y ∗) h),
+  end,
+  have h₂ : (y ∗)* y + 1 ≤ (y∗) :=
+  begin
+
+    have hh := lfp_monotone y 1,
+    simp [mul_one] at hh,
+    rw [add_comm] at hh,
+    -- need to rewrite lfp_monotone to accomodate this
+    sorry,
+
+  end,
+  exact le_trans h₁ h₂,
+end
 
 /-- Properties of ∗ --/
 
+lemma least_domination : ∀a : α, 1 + (a∗)*(a∗) + a ≤ (a∗) :=
+begin
+  intro a,
+  have h₀ := kleene_algebra.star_unfold_left a,
+  have h₁ : a * (1 + (a∗)*a ) ≤ a*(a∗ ) := mul_monotone (1 + (a∗)*a ) (a∗) a h₀,
+  --
 
-lemma partial_order_of_one : ∀ a : α, 1 ≤ a := sorry
 
-lemma partial_order_of_star : ∀ a : α, a ≤ (a ∗) := sorry
+  sorry,
+end
+
+
+
+lemma partial_order_of_one : ∀ a : α, 1 ≤ (a∗) :=
+begin
+  intro a,
+  rw [isemiring.le_def],
+  sorry,
+end
+
+lemma ineq_of_star : ∀ a : α, a ≤ (a ∗) := sorry
 
 lemma mul_of_star : ∀ a : α, (a ∗ ) * (a ∗ ) = (a ∗ ) := sorry
 
-lemma star_of_star : ∀ a : α, ((a ∗ ) ⋆)= (a ∗ ) := sorry
+lemma star_of_star : ∀ a : α, ((a ∗ ) ∗ )= (a ∗ ) := sorry
 
 end kleene_algebra
