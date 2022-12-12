@@ -68,8 +68,9 @@ variables [isemiring α] {a b c: α}
 
 
 /--  a = b iff a ≤ b and b ≤ a --/
-lemma ineq_of_eq : a = b ↔ a ≤ b ∧ b ≤ a :=
+lemma ineq_of_eq : ∀ a b : α, a = b ↔ a ≤ b ∧ b ≤ a :=
   begin
+    intros a b,
     apply iff.intro,
     {
       intro h,
@@ -307,8 +308,6 @@ begin
   exact left,
 end
 
-
-
 lemma ineq_of_star : ∀ a : α, a ≤ (a ∗) :=
 begin
   intro a,
@@ -327,12 +326,64 @@ begin
   exact le_implies_le_of_le_of_le h₁ h₀ h₂,
 end
 
-lemma mul_of_star : ∀ a : α, (a ∗ ) * (a ∗ ) ≤ (a ∗ ) :=
+lemma mul_of_star_le : ∀ a : α, (a ∗ ) * (a ∗ ) ≤ (a ∗ ) :=
 begin
   intro a,
-  simp [isemiring.le_def],
+  have h := kleene_algebra.star_unfold_right a,
+  have h₀ : a*(a ∗) ≤ 1 + a*(a ∗) :=
+  begin
+    rw [add_comm],
+    exact le_of_add (a * (a∗)) 1,
+  end,
+  have h₁ : a*(a ∗) ≤ (a ∗) := by exact le_trans h₀ h,
+  have h₂ :  a*(a∗) + (a ∗) ≤ (a ∗) :=
+  begin
+    have h' : a*(a ∗) + (a ∗) ≤ (a ∗) + (a ∗) := by
+        exact add_monotone (a*(a ∗)) (a ∗) (a ∗) h₁,
+    rw [isemiring.idem_add (a ∗)] at h',
+    exact h',
+  end,
+  apply kleene_algebra.star_inf_right a (a ∗) (a ∗) h₂,
 end
 
+lemma mul_of_star : ∀ a : α, (a ∗ ) * (a ∗ ) = (a ∗ ) :=
+begin
+  intro a,
+  have h₁ := mul_monotone 1 (a ∗) (a ∗) (partial_order_of_one a),
+  simp [mul_one] at h₁,
+  have h₂ := mul_of_star_le a,
+  have h₃ := (isemiring.ineq_of_eq ((a ∗)*(a ∗)) (a ∗)).mpr,
+  apply h₃,
+  apply and.intro,
+  {
+    exact h₂,
+  },
+  {
+    exact h₁,
+  }
+end
+
+
+
+lemma star_of_star : ∀ a : α, (a ∗ ) = ((a ∗ ) ∗) :=
+begin
+  intro a,
+
+  have h₁ : (a ∗ ) ≤ ((a ∗ ) ∗) := by exact star_monotone a (a ∗) (ineq_of_star a),
+  have h₂ : ((a ∗)∗) ≤ (a ∗) :=
+  begin
+    sorry,
+  end,
+  have h₃ := (isemiring.ineq_of_eq (a∗) ((a ∗)∗)).mpr,
+  apply h₃,
+  apply and.intro,
+  {
+    exact h₁,
+  },
+  {
+    exact h₂,
+  }
+end
 
 
 
