@@ -27,9 +27,12 @@ called a Kleene star (⋆).
 
 ## References
 
+* (Kozen, D. . A completeness theorem for Kleene algebras and the algebra of regular events.)
+  [https://www.cs.cornell.edu/~kozen/Papers/ka.pdf].
 * https://planetmath.org/idempotentsemiring
 * https://encyclopediaofmath.org/wiki/Idempotent_semi-ring
 * https://planetmath.org/kleenealgebra
+
 
 ## Tags
 
@@ -203,5 +206,31 @@ class kleene_algebra (α : Type u) extends isemiring.isemiring α :=
   (star_inf_left : ∀ a b c: α,  c*a + b ≤ c → b*(star a) ≤ c)
 
 notation  a`∗` := kleene_algebra.star a
+
+variables [kleene_algebra α] {a b c: α}
+
+/-- 'star_ind_right' and star_ind_left'  show that ∗
+ behaves like the relfexive transitive cloure of a relational algebra. --/
+lemma star_ind_right : a*c ≤ c → (a ∗) * c ≤ c := sorry
+
+/-- 'star_ind_right' and star_ind_left'  show that ∗
+ behaves like the relfexive transitive cloure of a relational algebra. --/
+lemma star_ind_left : c*a ≤ c → c*(a ∗) ≤ c := sorry
+
+/-- (a ∗) * b is the least prefixpoint of the monotone map c ↦ b + a*c --/
+lemma lfp_monotone : b + a * (a ∗ ) * b ≤ (a ∗ ) * b := sorry
+
+
+
+/-- Properties of ∗ --/
+
+
+lemma partial_order_of_one : ∀ a : α, 1 ≤ a := sorry
+
+lemma partial_order_of_star : ∀ a : α, a ≤ (a ∗) := sorry
+
+lemma mul_of_star : ∀ a : α, (a ∗ ) * (a ∗ ) = (a ∗ ) := sorry
+
+lemma star_of_star : ∀ a : α, ((a ∗ ) ⋆)= (a ∗ ) := sorry
 
 end kleene_algebra
