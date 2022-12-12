@@ -171,9 +171,9 @@ end
  c is the supremum of a + b.
 
 --/
-lemma ineq_of_add : a + b ≤ c ↔ a ≤ c ∧ b ≤ c  :=
+lemma ineq_of_add : ∀ a b c : α, a + b ≤ c ↔ a ≤ c ∧ b ≤ c  :=
 begin
-
+  intros a b c,
   apply iff.intro,
   {
     intro h,
@@ -200,6 +200,11 @@ end
 /--
   Multiplication preserves the partial order defined by ≤.
 --/
+
+
+
+
+
 lemma mul_monotone : ∀ a b c: α, a ≤ b → (c*a) ≤ (c*b)
 :=
 begin
@@ -222,6 +227,7 @@ begin
   rw (add_assoc (a * c) (a * c) (b * c)).symm,
   rw isemiring.idem_add (a * c),
 end
+
 
 end isemiring
 
@@ -254,31 +260,6 @@ variables [kleene_algebra α] {a b c: α}
 
 open isemiring
 
-/-- 'star_ind_right' and star_ind_left'  show that ∗
- behaves like the relfexive transitive cloure of a relational algebra. --/
-lemma star_ind_right : a*c ≤ c → (a ∗) * c ≤ c := sorry
-
-/-- 'star_ind_right' and star_ind_left'  show that ∗
- behaves like the relfexive transitive cloure of a relational algebra. --/
-lemma star_ind_left : c*a ≤ c → c*(a ∗) ≤ c := sorry
-
-/-- (a ∗) * b is the least prefixpoint of the monotone map c ↦ b + a*c --/
--- lemma lfp_monotone : ∀ a b : α, b + a * (a ∗ ) * b ≤ (a ∗ ) * b :=
--- begin
---   intros a b,
---   have h₀ : (1 + a * (a ∗ )) * b = b + a * (a ∗ ) * b :=
---   begin
---     exact one_add_mul (a * (a∗)) b
---   end,
---   have h₁: (1 + a * (a ∗ )) * b ≤ (a ∗ ) * b  :=
---   begin
---     have ha := (kleene_algebra.star_unfold_right a),
---     exact mul_monotone_comm (1 + a * (a ∗ )) (a ∗ ) b ha,
---   end,
---   exact (eq.symm h₀).trans_le h₁
--- end
-
-
 
 lemma lfp_monotone : ∀ a b : α, b + (a ∗ )* a * b ≤ (a ∗ ) * b :=
 begin
@@ -295,8 +276,6 @@ begin
   end,
   exact (eq.symm h₀).trans_le h₁
 end
-
-
 
 lemma star_monotone : ∀a b : α, a ≤ b → (a ∗ ) ≤ (b ∗) :=
 begin
@@ -318,32 +297,43 @@ begin
   exact le_trans h₁ h₂,
 end
 
-/-- Properties of ∗ --/
-
-lemma least_domination : ∀a : α, 1 + (a∗)*(a∗) + a ≤ (a∗) :=
-begin
-  intro a,
-  have h₀ := kleene_algebra.star_unfold_left a,
-  have h₁ : a * (1 + (a∗)*a ) ≤ a*(a∗ ) := mul_monotone (1 + (a∗)*a ) (a∗) a h₀,
-  --
-
-
-  sorry,
-end
-
-
 
 lemma partial_order_of_one : ∀ a : α, 1 ≤ (a∗) :=
 begin
   intro a,
-  rw [isemiring.le_def],
-  sorry,
+  have h₀ := kleene_algebra.star_unfold_left a,
+  have h₁ := (ineq_of_add 1 ((a ∗ )* a) (a ∗ )).mp h₀,
+  cases' h₁,
+  exact left,
 end
 
-lemma ineq_of_star : ∀ a : α, a ≤ (a ∗) := sorry
 
-lemma mul_of_star : ∀ a : α, (a ∗ ) * (a ∗ ) = (a ∗ ) := sorry
 
-lemma star_of_star : ∀ a : α, ((a ∗ ) ∗ )= (a ∗ ) := sorry
+lemma ineq_of_star : ∀ a : α, a ≤ (a ∗) :=
+begin
+  intro a,
+  have h₀ := kleene_algebra.star_unfold_right a,
+  have h₁ : a ≤ a * (a ∗) :=
+  begin
+     have h_int := mul_monotone 1 (a ∗) a (partial_order_of_one a),
+     simp [mul_one] at h_int,
+     exact h_int,
+  end,
+  have h₂ : a * (a ∗ ) ≤ 1 + a * (a ∗ ) :=
+  begin
+    rw [add_comm],
+    exact le_of_add (a * (a ∗)) 1,
+  end,
+  exact le_implies_le_of_le_of_le h₁ h₀ h₂,
+end
+
+lemma mul_of_star : ∀ a : α, (a ∗ ) * (a ∗ ) ≤ (a ∗ ) :=
+begin
+  intro a,
+  simp [isemiring.le_def],
+end
+
+
+
 
 end kleene_algebra
