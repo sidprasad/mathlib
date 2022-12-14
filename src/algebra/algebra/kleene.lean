@@ -392,18 +392,19 @@ begin
   have h₁ : (a∗) ≤ ((a∗) ∗) := by exact star_monotone a (a∗) (ineq_of_star a),
   have h₂ : ((a∗)∗) ≤ (a∗) :=
   begin
-    -- TODO
-    sorry,
+    have h := kleene_algebra.star_inf_right (a ∗ ) 1 (a ∗ ),
+    simp [mul_one] at h,
+    apply h,
+    rw mul_of_star,
+
+    have h' := add_monotone 1 (a ∗) (a ∗) (partial_order_of_one a),
+    rw [isemiring.idem_add (a ∗ )] at h',
+    rw [add_comm],
+    exact h',
   end,
   have h₃ := (isemiring.ineq_of_eq (a∗) ((a∗)∗)).mpr,
   apply h₃,
-  apply and.intro,
-  {
-    exact h₁,
-  },
-  {
-    exact h₂,
-  }
+  apply and.intro h₁ h₂,
 end
 
 
