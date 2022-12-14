@@ -372,15 +372,8 @@ begin
   have h₂ := mul_of_star_le a,
   have h₃ := (isemiring.ineq_of_eq ((a∗)*(a∗)) (a∗)).mpr,
   apply h₃,
-  apply and.intro,
-  {
-    exact h₂,
-  },
-  {
-    exact h₁,
-  }
+  apply and.intro h₂ h₁,
 end
-
 
 /--
   Kleene star is idempotent.
