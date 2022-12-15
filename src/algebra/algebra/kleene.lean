@@ -67,14 +67,10 @@ lemma ineq_of_eq : ∀ a b : α, a = b ↔ a ≤ b ∧ b ≤ a :=
   begin
     intros a b,
     apply iff.intro,
-    {
-      intro h,
-      exact antisymm_iff.mpr h,
-    },
-    {
-      intro h,
-      exact le_antisymm_iff.mpr h,
-    }
+    { intro h,
+      exact antisymm_iff.mpr h, },
+    { intro h,
+      exact le_antisymm_iff.mpr h,}
   end
 
 
@@ -108,12 +104,8 @@ begin
     begin
       calc y + c + c  = y + (c + c) : _
       ... = y + c : _,
-      {
-        exact add_assoc y c c,
-      },
-      {
-        rw (isemiring.idem_add c),
-      }
+      { exact add_assoc y c c, },
+      { rw (isemiring.idem_add c), }
     end,
   have h₃ : (x + c) + (y + c) = (y + c) := by exact (eq.congr h₂ h₃).mp h₁,
   exact h₃,
@@ -132,7 +124,6 @@ begin
     rw [add_comm a b],
     exact le_of_add b a,
   end,
-
 
   have ha₁ : a + c = c := by exact (isemiring.le_def a c).mp h₁,
   have hb₁ : b +c = c := by exact (isemiring.le_def b c).mp h₂,
@@ -162,34 +153,24 @@ begin
 end
 
 /--
-
  c is the supremum of a and b with respect to ≤ iff
  c is the supremum of a + b.
-
 --/
 lemma ineq_of_add : ∀ a b c : α, a + b ≤ c ↔ a ≤ c ∧ b ≤ c  :=
 begin
   intros a b c,
   apply iff.intro,
-  {
-    intro h,
+  { intro h,
     apply and.intro,
-    {
-      have h_ineq₁ : a ≤ a + b := le_of_add a b,
-      exact le_trans h_ineq₁ h,
-    },
-    {
-      have h_ineq₂ : b ≤ b + a :=  le_of_add b a,
+    { have h_ineq₁ : a ≤ a + b := le_of_add a b,
+      exact le_trans h_ineq₁ h, },
+    { have h_ineq₂ : b ≤ b + a :=  le_of_add b a,
       rw ←(add_comm a b) at h_ineq₂,
-      exact le_trans h_ineq₂ h,
-    }
-  },
-  {
-    have h₁ := supremum_of_add a b c,
+      exact le_trans h_ineq₂ h, }},
+  { have h₁ := supremum_of_add a b c,
     intros h,
     cases' h,
-    exact h₁ left right,
-  }
+    exact h₁ left right, }
 end
 
 
@@ -221,7 +202,6 @@ begin
   rw (add_assoc (a * c) (a * c) (b * c)).symm,
   rw isemiring.idem_add (a * c),
 end
-
 
 end isemiring
 
@@ -399,7 +379,5 @@ begin
   apply h₃,
   apply and.intro h₁ h₂,
 end
-
-
 
 end kleene_algebra
